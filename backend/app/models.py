@@ -35,3 +35,33 @@ class Sale(Base):
  unit_price:Mapped[float]=mapped_column(Float)
  source_file:Mapped[str]=mapped_column(String,default="")
  __table_args__=(UniqueConstraint("transaction_id","sku"),)
+
+
+class Forecast(Base):
+ __tablename__="forecasts"
+ id:Mapped[int]=mapped_column(primary_key=True)
+ sku:Mapped[str]=mapped_column(String,index=True)
+ generated_at:Mapped[datetime]=mapped_column(DateTime,default=datetime.utcnow)
+ horizon_days:Mapped[int]=mapped_column(Integer)
+ avg_daily_demand:Mapped[float]=mapped_column(Float)
+ forecast_quantity:Mapped[float]=mapped_column(Float)
+ method:Mapped[str]=mapped_column(String,default="moving_average")
+
+class PurchaseOrder(Base):
+ __tablename__="purchase_orders"
+ id:Mapped[int]=mapped_column(primary_key=True)
+ supplier:Mapped[str]=mapped_column(String,default="")
+ status:Mapped[str]=mapped_column(String,default="draft")
+ created_at:Mapped[datetime]=mapped_column(DateTime,default=datetime.utcnow)
+ received_at:Mapped[datetime|None]=mapped_column(DateTime,nullable=True)
+ notes:Mapped[str]=mapped_column(String,default="")
+ items:Mapped[list["PurchaseOrderItem"]]=relationship(back_populates="order",cascade="all,delete-orphan")
+
+class PurchaseOrderItem(Base):
+ __tablename__="purchase_order_items"
+ id:Mapped[int]=mapped_column(primary_key=True)
+ order_id:Mapped[int]=mapped_column(ForeignKey("purchase_orders.id"))
+ sku:Mapped[str]=mapped_column(String,index=True)
+ quantity:Mapped[int]=mapped_column(Integer)
+ unit_cost:Mapped[float]=mapped_column(Float,default=0)
+ order:Mapped[PurchaseOrder]=relationship(back_populates="items")
